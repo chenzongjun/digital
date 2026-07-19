@@ -1,0 +1,9 @@
+# 依赖安装目录与构建产物可由 package-lock.json 和构建命令还原，无需提交。
+node_modules/
+dist/
+
+# 本地环境与系统生成文件不应上传。
+.env
+.env.*
+!.env.example
+.DS_Store

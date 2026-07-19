@@ -1,0 +1,88 @@
+.report-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: @color-page-background;
+
+  &__header {
+    display: flex;
+    flex: 0 0 @page-header-height;
+    align-items: center;
+    justify-content: space-between;
+    height: @page-header-height;
+    padding: 0 24px;
+    color: @color-text;
+    border-bottom: 1px solid @color-border;
+    background: @color-surface;
+    line-height: normal;
+  }
+
+  &__title {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    min-width: 0;
+    font-size: 16px;
+
+    .ant-btn {
+      margin-left: -8px;
+    }
+  }
+
+  &__mode {
+    color: @color-secondary-text;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  &__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__sider {
+    flex: 0 0 @directory-width !important;
+    max-width: @directory-width !important;
+    min-width: @directory-width !important;
+    width: @directory-width !important;
+    border-right: 1px solid @color-border;
+    background: @color-surface;
+
+    &.ant-layout-sider-collapsed {
+      flex: 0 0 @directory-collapsed-width !important;
+      max-width: @directory-collapsed-width !important;
+      min-width: @directory-collapsed-width !important;
+      width: @directory-collapsed-width !important;
+    }
+  }
+
+  &__workspace {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: @color-surface;
+  }
+}
+
+.report-content-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: @color-surface;
+}
+
+@media (max-width: 767px) {
+  .report-page {
+    &__header {
+      padding: 0 12px;
+    }
+  }
+}

@@ -1,0 +1,50 @@
+.report-section-list {
+  width: 100%;
+}
+
+.report-section {
+  scroll-margin-top: 20px;
+  margin-bottom: 20px;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    margin-bottom: 8px;
+    padding-left: 12px;
+    border-left: 4px solid @color-primary;
+
+    h2 {
+      margin: 0;
+      color: @color-text;
+      font-size: 16px;
+      font-weight: 600;
+    }
+  }
+
+  &__title {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  &__tooltip-icon {
+    color: @color-secondary-text;
+    cursor: help;
+  }
+
+  .ant-form-item {
+    margin-bottom: 0;
+  }
+
+  &--depth-2 {
+    .report-section__header {
+      padding-left: 0;
+      border-left: 0;
+
+      h2 {
+        font-size: 14px;
+      }
+    }
+  }
+}

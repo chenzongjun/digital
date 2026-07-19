@@ -1,0 +1,64 @@
+.report-footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 76px;
+  padding: 12px 32px;
+  border-top: 1px solid @color-border;
+  background: @color-surface;
+  box-shadow: 0 -2px 8px rgb(15 23 42 / 4%);
+
+  &__owner {
+    display: flex;
+    align-items: center;
+    min-width: 340px;
+    margin: 0;
+
+    .ant-form-item-row {
+      display: flex;
+      flex: 1;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: center;
+    }
+
+    .ant-form-item-label {
+      flex: 0 0 auto;
+      padding: 0 8px 0 0;
+      white-space: nowrap;
+
+      > label {
+        height: 32px;
+      }
+    }
+
+    .ant-form-item-control {
+      flex: 0 0 200px;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 767px) {
+  .report-footer {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 16px;
+
+    &__owner {
+      min-width: 100%;
+    }
+
+    &__actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
