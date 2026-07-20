@@ -2,6 +2,7 @@ export const REPORT_SECTIONS = [
   {
     sectionId: 'requirement-description',
     title: '一、需求描述',
+    required: true,
     tooltip: '请填写本次采购的业务背景、目标及范围。',
   },
   {
