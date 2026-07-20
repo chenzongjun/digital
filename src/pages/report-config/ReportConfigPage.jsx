@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { ArrowLeftOutlined, MenuOutlined } from '@ant-design/icons';
-import { Button, Drawer, Form, Grid, Layout, message } from 'antd';
+import { ArrowLeftOutlined } from '@ant-design/icons';
+import { Form, Grid, Layout, message } from 'antd';
 import { FLAT_REPORT_SECTIONS } from '../../constants/report-sections';
 import ReportDirectory from './ReportDirectory';
 import ReportFooter from './ReportFooter';
@@ -27,12 +27,9 @@ const ReportPageContent = () => {
   const {
     contentScrollRef,
     isDirectoryCollapsed,
-    isDirectoryDrawerOpen,
     isReadonly,
     setIsDirectoryCollapsed,
-    setIsDirectoryDrawerOpen,
   } = useReportPage();
-  const isMobile = !screens.md;
   const isCompact = !screens.xl;
   const initialValues = useMemo(getInitialValues, []);
 
@@ -60,50 +57,25 @@ const ReportPageContent = () => {
     }
   };
 
-  const closeDirectoryDrawer = () => {
-    setIsDirectoryDrawerOpen(false);
-  };
-
   return (
     <Form className="report-page" form={form} initialValues={initialValues} layout="vertical">
       <Header className="report-page__header">
         <div className="report-page__title">
-          {isMobile && (
-            <Button
-              aria-label="打开目录"
-              icon={<MenuOutlined />}
-              type="text"
-              onClick={() => setIsDirectoryDrawerOpen(true)}
-            />
-          )}
           <ArrowLeftOutlined aria-hidden="true" />
           <strong>服务器采购项目 A</strong>
         </div>
         <span className="report-page__mode">{isReadonly ? '只读查看' : '编辑中'}</span>
       </Header>
-      <Layout className="report-page__body" hasSider={!isMobile}>
-        {!isMobile && (
-          <Sider
-            className="report-page__sider"
-            collapsed={isDirectoryCollapsed}
-            collapsedWidth={64}
-            theme="light"
-            width={260}
-          >
-            <ReportDirectory isCollapsed={isDirectoryCollapsed} />
-          </Sider>
-        )}
-        <Drawer
-          bodyStyle={{ padding: 0 }}
-          className="report-directory-drawer"
-          placement="left"
-          title="目录导航"
-          visible={isMobile && isDirectoryDrawerOpen}
-          width={280}
-          onClose={closeDirectoryDrawer}
+      <Layout className="report-page__body" hasSider>
+        <Sider
+          className="report-page__sider"
+          collapsed={isDirectoryCollapsed}
+          collapsedWidth={64}
+          theme="light"
+          width={260}
         >
-          <ReportDirectory isCollapsed={false} canCollapse={false} onNavigate={closeDirectoryDrawer} />
-        </Drawer>
+          <ReportDirectory isCollapsed={isDirectoryCollapsed} />
+        </Sider>
         <Layout className="report-page__workspace">
           <Content ref={contentScrollRef} className="report-content-scroll">
             <ReportSectionList />

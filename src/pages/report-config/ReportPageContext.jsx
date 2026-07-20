@@ -10,10 +10,8 @@ const CONTENT_SCROLL_OFFSET = 20;
 export const ReportPageProvider = ({ mode, children }) => {
   // 当前位于可视区域的章节 ID，同时作为目录 Menu 的选中项。
   const [activeSectionId, setActiveSectionId] = useState(FLAT_REPORT_SECTIONS[0].sectionId);
-  // 宽屏下用户手动收起目录的状态。
+  // 用户手动收起目录的状态。
   const [isDirectoryCollapsed, setIsDirectoryCollapsed] = useState(false);
-  // 移动端目录由 Drawer 承载，此状态控制其显示与隐藏。
-  const [isDirectoryDrawerOpen, setIsDirectoryDrawerOpen] = useState(false);
   // 章节挂载或卸载时递增，用于让 IntersectionObserver 重新订阅最新 DOM 节点。
   const [sectionVersion, setSectionVersion] = useState(0);
 
@@ -110,8 +108,6 @@ export const ReportPageProvider = ({ mode, children }) => {
       setActiveSectionId,
       isDirectoryCollapsed,
       setIsDirectoryCollapsed,
-      isDirectoryDrawerOpen,
-      setIsDirectoryDrawerOpen,
       // 跨组件共享的滚动容器与章节注册、定位方法。
       contentScrollRef,
       registerSection,
@@ -120,7 +116,6 @@ export const ReportPageProvider = ({ mode, children }) => {
     [
       activeSectionId,
       isDirectoryCollapsed,
-      isDirectoryDrawerOpen,
       isReadonly,
       mode,
       registerSection,
