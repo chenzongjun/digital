@@ -1,86 +1,193 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
-import { Form, message } from 'antd'
-import { FLAT_REPORT_SECTIONS } from '../../constants/report-sections'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { Form, message } from 'antd';
+import {
+  FLAT_REPORT_SECTIONS,
+  REPORT_SECTIONS,
+  SELECTION_PROCESS_SECTION_ID,
+} from '../../constants/report-sections';
 
-// 默认值为 null，便于在组件脱离 Provider 时尽早发现使用错误。
-const ReportPageContext = createContext(null)
+const CONTENT_SCROLL_OFFSET = 20;
+const ReportPageContext = createContext(null);
 
 const getInitialValues = () => {
+  const selectionProcessSection = REPORT_SECTIONS.find(
+    (section) => section.sectionId === SELECTION_PROCESS_SECTION_ID,
+  );
+  const sections = {};
+
+  FLAT_REPORT_SECTIONS.forEach((section) => {
+    if (section.parentType === 'section' && section.fieldType === 'richText') {
+      return;
+    }
+
+    if (section.fieldType === 'editableTable') {
+      sections[section.sectionId] = {
+        rows: [{
+          rowId: 'selection-criteria-row-1',
+          supplier: undefined,
+          brand: undefined,
+          quote: undefined,
+          score: undefined,
+        }],
+      };
+      return;
+    }
+
+    if (section.fieldType) {
+      sections[section.sectionId] = {
+        content: `这里是“${section.title}”的示例内容，用于验证配置化字段渲染。`,
+      };
+    }
+  });
+
+  sections[SELECTION_PROCESS_SECTION_ID] = {
+    children: (selectionProcessSection?.children || []).map((section) => ({
+      sectionId: section.sectionId,
+      title: section.title,
+      content: `<p>这里是“${section.title}”的示例富文本内容。</p>`,
+    })),
+  };
+
   return {
     ownerId: 'zhangsan',
-    sections: Object.fromEntries(
-      FLAT_REPORT_SECTIONS.map(section => [section.sectionId, { content: `这里是“${section.title}”的示例内容，用于验证右侧填写区域的独立纵向滚动。` }]),
-    ),
+    sections,
+  };
+};
+
+const getErrorSectionId = (fieldName, form) => {
+  if (!Array.isArray(fieldName) || fieldName[0] !== 'sections') {
+    return null;
   }
-}
+
+  const sectionId = fieldName[1];
+
+  if (
+    sectionId === SELECTION_PROCESS_SECTION_ID
+    && fieldName[2] === 'children'
+    && Number.isInteger(fieldName[3])
+  ) {
+    return form.getFieldValue([
+      'sections',
+      SELECTION_PROCESS_SECTION_ID,
+      'children',
+      fieldName[3],
+      'sectionId',
+    ]) || SELECTION_PROCESS_SECTION_ID;
+  }
+
+  return sectionId;
+};
 
 export const ReportPageProvider = ({ mode, children }) => {
-  const [form] = Form.useForm()
-  const initialValues = useMemo(getInitialValues, [])
-  // 用户手动收起目录的状态。
-  const [isDirectoryCollapsed, setIsDirectoryCollapsed] = useState(false)
+  const [form] = Form.useForm();
+  const initialValues = useMemo(getInitialValues, []);
+  const [activeSectionId, setActiveSectionId] = useState(
+    REPORT_SECTIONS[0].sectionId,
+  );
+  const [isDirectoryCollapsed, setIsDirectoryCollapsed] = useState(false);
+  const contentScrollRef = useRef(null);
+  const isReadonly = mode === 'detail' || mode === 'approval';
 
-  // 右侧报告区是唯一的滚动容器，目录和页面本身不参与滚动。
-  const contentScrollRef = useRef(null)
-  // 详情和审批模式复用同一页面，但禁止编辑表单项。
-  const isReadonly = mode === 'detail' || mode === 'approval'
+  const scrollToSection = useCallback((sectionId, behavior = 'smooth') => {
+    const container = contentScrollRef.current;
+    const sectionElement = document.getElementById(`report-section-${sectionId}`);
+
+    if (!container || !sectionElement) {
+      return;
+    }
+
+    const containerTop = container.getBoundingClientRect().top;
+    const sectionTop = sectionElement.getBoundingClientRect().top;
+
+    container.scrollTo({
+      behavior,
+      top: container.scrollTop + sectionTop - containerTop - CONTENT_SCROLL_OFFSET,
+    });
+    setActiveSectionId(sectionId);
+  }, []);
 
   const handleCancel = useCallback(() => {
-    form.resetFields()
-    message.info('已恢复示例初始值')
-  }, [form])
+    form.resetFields();
+    setActiveSectionId(REPORT_SECTIONS[0].sectionId);
+    scrollToSection(REPORT_SECTIONS[0].sectionId, 'auto');
+    message.info('已恢复示例初始值');
+  }, [form, scrollToSection]);
 
   const handleSave = useCallback(() => {
-    // Draft saving intentionally skips required-field validation in this layout-only phase.
-    message.success('报告已暂存（示例）')
-  }, [])
+    message.success('报告已暂存（示例）');
+  }, []);
 
   const handleSubmit = useCallback(async () => {
     try {
-      await form.validateFields()
-      message.success('报告已提交（示例）')
-    } catch {
-      message.error('请先完成必填项')
+      await form.validateFields();
+      message.success('报告已提交（示例）');
+    } catch (errorInfo) {
+      const firstErrorName = errorInfo?.errorFields?.[0]?.name;
+      const sectionId = getErrorSectionId(firstErrorName, form);
+
+      if (sectionId) {
+        setActiveSectionId(sectionId);
+        requestAnimationFrame(() => {
+          scrollToSection(sectionId);
+        });
+      }
+
+      message.error('请先完成必填项');
     }
-  }, [form])
+  }, [form, scrollToSection]);
 
   const contextValue = useMemo(
     () => ({
-      // 页面基础状态：供页头、底部操作栏和字段渲染组件共同使用。
       mode,
       isReadonly,
-      // 表单状态和操作集中提供给页面布局与底部操作栏。
       form,
       initialValues,
       handleCancel,
       handleSave,
       handleSubmit,
-      // 目录与报告区联动状态。
+      activeSectionId,
+      setActiveSectionId,
       isDirectoryCollapsed,
       setIsDirectoryCollapsed,
-      // Anchor 通过该引用监听并滚动右侧报告区。
       contentScrollRef,
+      scrollToSection,
     }),
-    [form, handleCancel, handleSave, handleSubmit, initialValues, isDirectoryCollapsed, isReadonly, mode],
-  )
+    [
+      activeSectionId,
+      form,
+      handleCancel,
+      handleSave,
+      handleSubmit,
+      initialValues,
+      isDirectoryCollapsed,
+      isReadonly,
+      mode,
+      scrollToSection,
+    ],
+  );
 
   return (
     <ReportPageContext.Provider value={contextValue}>
-      <Form component={false} form={form} initialValues={initialValues} layout='vertical'>
+      <Form component={false} form={form} initialValues={initialValues} layout="vertical">
         {children}
       </Form>
     </ReportPageContext.Provider>
-  )
-}
+  );
+};
 
 export const useReportPage = () => {
-  // 页面内组件通过该 Hook 获取共享状态，避免逐层透传 props。
-  const contextValue = useContext(ReportPageContext)
+  const contextValue = useContext(ReportPageContext);
 
   if (!contextValue) {
-    // 明确提示 Provider 缺失，方便排查页面组件被单独使用的情况。
-    throw new Error('useReportPage must be used within ReportPageProvider')
+    throw new Error('useReportPage must be used within ReportPageProvider');
   }
 
-  return contextValue
-}
+  return contextValue;
+};
