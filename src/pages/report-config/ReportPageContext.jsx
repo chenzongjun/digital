@@ -24,13 +24,13 @@ export const ReportPageProvider = ({ mode, children }) => {
   const [activeSectionId, setActiveSectionId] = useState(FLAT_REPORT_SECTIONS[0].sectionId)
   // 用户手动收起目录的状态。
   const [isDirectoryCollapsed, setIsDirectoryCollapsed] = useState(false)
-  // 章节挂载或卸载时递增，用于让 IntersectionObserver 重新订阅最新 DOM 节点。
-  const [sectionVersion, setSectionVersion] = useState(0)
 
   // 右侧报告区是唯一的滚动容器，目录和页面本身不参与滚动。
   const contentScrollRef = useRef(null)
   // 保存 sectionId 与对应 DOM 节点的映射，目录定位时可直接查询目标节点。
   const sectionNodesRef = useRef(new Map())
+  // 保存当前观察器，使章节 ref 挂载或卸载时可直接更新订阅，避免触发 Provider 重渲染。
+  const observerRef = useRef(null)
   // 详情和审批模式复用同一页面，但禁止编辑表单项。
   const isReadonly = mode === 'detail' || mode === 'approval'
 
@@ -57,16 +57,21 @@ export const ReportPageProvider = ({ mode, children }) => {
     // ReportSection 的 ref 回调会在挂载时传入节点、卸载时传入 null。
     const previousNode = sectionNodesRef.current.get(sectionId)
 
-    // 节点首次挂载或被替换后，登记最新节点并通知观察器重新订阅。
-    if (sectionNode && previousNode !== sectionNode) {
-      sectionNodesRef.current.set(sectionId, sectionNode)
-      setSectionVersion(version => version + 1)
+    // 相同节点重复注册时无需更新映射或观察器。
+    if (previousNode === sectionNode) {
+      return
     }
 
-    // 章节被删除或条件渲染隐藏时，清除过期节点，避免观察器持有无效引用。
-    if (!sectionNode && previousNode) {
+    // 节点被替换、删除或条件渲染隐藏时，先清理旧节点订阅。
+    if (previousNode) {
+      observerRef.current?.unobserve(previousNode)
       sectionNodesRef.current.delete(sectionId)
-      setSectionVersion(version => version + 1)
+    }
+
+    // 新节点挂载时登记映射，并在观察器已创建的情况下立即订阅。
+    if (sectionNode) {
+      sectionNodesRef.current.set(sectionId, sectionNode)
+      observerRef.current?.observe(sectionNode)
     }
   }, [])
 
@@ -122,12 +127,20 @@ export const ReportPageProvider = ({ mode, children }) => {
       },
     )
 
-    // sectionVersion 改变表示章节 DOM 集合有变化，重新订阅当前全部章节。
+    observerRef.current = observer
+
+    // effect 执行前已挂载的章节统一进行首次订阅；后续变化由 registerSection 直接处理。
     sectionNodesRef.current.forEach(sectionNode => observer.observe(sectionNode))
 
-    // Provider 卸载或章节集合变化前释放观察器，避免重复监听。
-    return () => observer.disconnect()
-  }, [sectionVersion])
+    // Provider 卸载或 StrictMode 重放 effect 时释放观察器，避免重复监听。
+    return () => {
+      observer.disconnect()
+
+      if (observerRef.current === observer) {
+        observerRef.current = null
+      }
+    }
+  }, [])
 
   const contextValue = useMemo(
     () => ({
