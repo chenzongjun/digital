@@ -33,7 +33,7 @@ const ReportPageContent = () => {
           theme='light'
           width={260}
         >
-          <ReportDirectory isCollapsed={isDirectoryCollapsed} />
+          <ReportDirectory />
         </Sider>
         <Layout className='report-page__workspace'>
           <Content ref={contentScrollRef} className='report-content-scroll'>

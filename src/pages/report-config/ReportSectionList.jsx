@@ -1,22 +1,15 @@
-import { useCallback } from 'react';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { Form, Input, Tooltip } from 'antd';
 import { FLAT_REPORT_SECTIONS } from '../../constants/report-sections';
 import { useReportPage } from './ReportPageContext';
 
 const ReportSection = ({ section }) => {
-  const { isReadonly, registerSection } = useReportPage();
-  const sectionRef = useCallback(
-    (sectionNode) => registerSection(section.sectionId, sectionNode),
-    [registerSection, section.sectionId],
-  );
+  const { isReadonly } = useReportPage();
   const fieldLabel = section.depth === 1 ? '项目说明' : '补充说明';
 
   return (
     <section
-      ref={sectionRef}
       className={`report-section report-section--depth-${section.depth}`}
-      data-section-id={section.sectionId}
       id={`report-section-${section.sectionId}`}
     >
       <header className="report-section__header">

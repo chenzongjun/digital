@@ -1,12 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import { Form, message } from 'antd'
 import { FLAT_REPORT_SECTIONS } from '../../constants/report-sections'
 
 // 默认值为 null，便于在组件脱离 Provider 时尽早发现使用错误。
 const ReportPageContext = createContext(null)
-
-// 目录定位后，章节标题距离滚动容器顶部保留的视觉间距。
-const CONTENT_SCROLL_OFFSET = 20
 
 const getInitialValues = () => {
   return {
@@ -20,17 +17,11 @@ const getInitialValues = () => {
 export const ReportPageProvider = ({ mode, children }) => {
   const [form] = Form.useForm()
   const initialValues = useMemo(getInitialValues, [])
-  // 当前位于可视区域的章节 ID，同时作为目录 Menu 的选中项。
-  const [activeSectionId, setActiveSectionId] = useState(FLAT_REPORT_SECTIONS[0].sectionId)
   // 用户手动收起目录的状态。
   const [isDirectoryCollapsed, setIsDirectoryCollapsed] = useState(false)
 
   // 右侧报告区是唯一的滚动容器，目录和页面本身不参与滚动。
   const contentScrollRef = useRef(null)
-  // 保存 sectionId 与对应 DOM 节点的映射，目录定位时可直接查询目标节点。
-  const sectionNodesRef = useRef(new Map())
-  // 保存当前观察器，使章节 ref 挂载或卸载时可直接更新订阅，避免触发 Provider 重渲染。
-  const observerRef = useRef(null)
   // 详情和审批模式复用同一页面，但禁止编辑表单项。
   const isReadonly = mode === 'detail' || mode === 'approval'
 
@@ -53,95 +44,6 @@ export const ReportPageProvider = ({ mode, children }) => {
     }
   }, [form])
 
-  const registerSection = useCallback((sectionId, sectionNode) => {
-    // ReportSection 的 ref 回调会在挂载时传入节点、卸载时传入 null。
-    const previousNode = sectionNodesRef.current.get(sectionId)
-
-    // 相同节点重复注册时无需更新映射或观察器。
-    if (previousNode === sectionNode) {
-      return
-    }
-
-    // 节点被替换、删除或条件渲染隐藏时，先清理旧节点订阅。
-    if (previousNode) {
-      observerRef.current?.unobserve(previousNode)
-      sectionNodesRef.current.delete(sectionId)
-    }
-
-    // 新节点挂载时登记映射，并在观察器已创建的情况下立即订阅。
-    if (sectionNode) {
-      sectionNodesRef.current.set(sectionId, sectionNode)
-      observerRef.current?.observe(sectionNode)
-    }
-  }, [])
-
-  const scrollToSection = useCallback(sectionId => {
-    // 由目录点击触发：根据 sectionId 找到右侧报告区中的目标章节。
-    const scrollContainer = contentScrollRef.current
-    const sectionNode = sectionNodesRef.current.get(sectionId)
-
-    // 首次渲染尚未完成或配置中不存在该章节时，不执行滚动。
-    if (!scrollContainer || !sectionNode) {
-      return
-    }
-
-    // 两个 top 都相对于浏览器视口，做差后得到章节相对报告滚动容器的距离。
-    const containerTop = scrollContainer.getBoundingClientRect().top
-    const sectionTop = sectionNode.getBoundingClientRect().top
-
-    // 点击目录后立即更新选中态，等待滚动观察器下一次回调时再进行校正。
-    setActiveSectionId(sectionId)
-    scrollContainer.scrollTo({
-      // 使用当前 scrollTop 叠加相对距离，避免误滚动浏览器页面。
-      top: Math.max(0, scrollContainer.scrollTop + sectionTop - containerTop - CONTENT_SCROLL_OFFSET),
-      behavior: 'smooth',
-    })
-  }, [])
-
-  useEffect(() => {
-    const scrollContainer = contentScrollRef.current
-
-    // 不支持 IntersectionObserver 时仍保留目录点击定位能力，仅不做滚动自动高亮。
-    if (!scrollContainer || !window.IntersectionObserver) {
-      return undefined
-    }
-
-    // 监听右侧滚动区中的章节，使滚动位置成为目录选中态的唯一来源。
-    const observer = new IntersectionObserver(
-      entries => {
-        // 同一时刻可能有多个章节进入可视区，取最靠近滚动区顶部的章节作为当前章节。
-        const visibleEntries = entries
-          .filter(entry => entry.isIntersecting)
-          .sort((firstEntry, secondEntry) => firstEntry.boundingClientRect.top - secondEntry.boundingClientRect.top)
-
-        if (visibleEntries[0]) {
-          setActiveSectionId(visibleEntries[0].target.dataset.sectionId)
-        }
-      },
-      {
-        // 明确指定右侧报告区为观察根节点，而不是整个浏览器窗口。
-        root: scrollContainer,
-        // 将有效观察区收窄到容器上方区域，避免页面底部章节过早抢占目录选中态。
-        rootMargin: '-12% 0px -72% 0px',
-        threshold: 0,
-      },
-    )
-
-    observerRef.current = observer
-
-    // effect 执行前已挂载的章节统一进行首次订阅；后续变化由 registerSection 直接处理。
-    sectionNodesRef.current.forEach(sectionNode => observer.observe(sectionNode))
-
-    // Provider 卸载或 StrictMode 重放 effect 时释放观察器，避免重复监听。
-    return () => {
-      observer.disconnect()
-
-      if (observerRef.current === observer) {
-        observerRef.current = null
-      }
-    }
-  }, [])
-
   const contextValue = useMemo(
     () => ({
       // 页面基础状态：供页头、底部操作栏和字段渲染组件共同使用。
@@ -154,16 +56,12 @@ export const ReportPageProvider = ({ mode, children }) => {
       handleSave,
       handleSubmit,
       // 目录与报告区联动状态。
-      activeSectionId,
-      setActiveSectionId,
       isDirectoryCollapsed,
       setIsDirectoryCollapsed,
-      // 跨组件共享的滚动容器与章节注册、定位方法。
+      // Anchor 通过该引用监听并滚动右侧报告区。
       contentScrollRef,
-      registerSection,
-      scrollToSection,
     }),
-    [activeSectionId, form, handleCancel, handleSave, handleSubmit, initialValues, isDirectoryCollapsed, isReadonly, mode, registerSection, scrollToSection],
+    [form, handleCancel, handleSave, handleSubmit, initialValues, isDirectoryCollapsed, isReadonly, mode],
   )
 
   return (
