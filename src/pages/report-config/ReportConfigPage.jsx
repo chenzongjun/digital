@@ -28,7 +28,11 @@ const ReportPageContent = () => {
         <span className='report-page__mode'>{isReadonly ? '只读查看' : '编辑中'}</span>
       </Header>
       <Layout className='report-page__body' hasSider>
-        <Sider className='report-page__sider' collapsed={isDirectoryCollapsed} collapsedWidth={64} theme='light' width={260}>
+        <Sider
+          className={`report-page__sider${isDirectoryCollapsed ? ' report-page__sider--collapsed' : ''}`}
+          theme='light'
+          width={260}
+        >
           <ReportDirectory isCollapsed={isDirectoryCollapsed} />
         </Sider>
         <Layout className='report-page__workspace'>

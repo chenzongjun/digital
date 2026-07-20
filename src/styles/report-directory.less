@@ -19,6 +19,16 @@
     flex: 0 0 auto;
   }
 
+  &__menu-container {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
   &__menu {
     flex: 1 1 auto;
     min-height: 0;
@@ -26,17 +36,13 @@
     overflow-y: auto;
     border-right: 0;
 
-    &.ant-menu-inline-collapsed {
-      width: 100%;
-    }
-
     &.ant-menu-light .ant-menu-item-selected {
       background: transparent;
     }
   }
 }
 
-.ant-layout-sider-collapsed .report-directory__header {
-  justify-content: center;
-  padding: 0;
+.report-page__sider--collapsed .report-directory__header {
+  justify-content: flex-start;
+  padding: 0 8px;
 }

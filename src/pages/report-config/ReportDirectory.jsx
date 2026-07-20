@@ -55,6 +55,12 @@ const ReportDirectory = ({ isCollapsed = false, canCollapse = true, onNavigate }
     handleNavigate(key);
   };
 
+  const handleOpenChange = (nextOpenKeys) => {
+    if (!isCollapsed) {
+      setOpenKeys(nextOpenKeys);
+    }
+  };
+
   const handleToggleDirectory = () => {
     setIsDirectoryCollapsed(!isDirectoryCollapsed);
   };
@@ -75,17 +81,18 @@ const ReportDirectory = ({ isCollapsed = false, canCollapse = true, onNavigate }
           </Tooltip>
         )}
       </div>
-      <Menu
-        className="report-directory__menu"
-        inlineCollapsed={isCollapsed}
-        mode="inline"
-        openKeys={isCollapsed ? [] : openKeys}
-        selectedKeys={[activeSectionId]}
-        onClick={handleMenuClick}
-        onOpenChange={setOpenKeys}
-      >
-        {menuNodes}
-      </Menu>
+      <div className="report-directory__menu-container" hidden={isCollapsed}>
+        <Menu
+          className="report-directory__menu"
+          mode="inline"
+          openKeys={openKeys}
+          selectedKeys={[activeSectionId]}
+          onClick={handleMenuClick}
+          onOpenChange={handleOpenChange}
+        >
+          {menuNodes}
+        </Menu>
+      </div>
     </aside>
   );
 };
