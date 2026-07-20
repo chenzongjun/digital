@@ -7,8 +7,8 @@ const OWNER_OPTIONS = [
   { label: '王五', value: 'wangwu' },
 ];
 
-const ReportFooter = ({ onCancel, onSave, onSubmit }) => {
-  const { isReadonly } = useReportPage();
+const ReportFooter = () => {
+  const { handleCancel, handleSave, handleSubmit, isReadonly } = useReportPage();
 
   if (isReadonly) {
     return null;
@@ -25,9 +25,9 @@ const ReportFooter = ({ onCancel, onSave, onSubmit }) => {
         <Select allowClear options={OWNER_OPTIONS} placeholder="请选择" />
       </Form.Item>
       <div className="report-footer__actions">
-        <Button onClick={onCancel}>取消</Button>
-        <Button onClick={onSave}>暂存</Button>
-        <Button type="primary" onClick={onSubmit}>
+        <Button onClick={handleCancel}>取消</Button>
+        <Button onClick={handleSave}>暂存</Button>
+        <Button type="primary" onClick={handleSubmit}>
           提交
         </Button>
       </div>
