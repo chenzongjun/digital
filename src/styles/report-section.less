@@ -69,6 +69,21 @@
   width: 100%;
   overflow: hidden;
 
+  &__column-title {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  &__required-mark {
+    color: @color-danger;
+  }
+
+  &__tooltip-icon {
+    color: @color-secondary-text;
+    cursor: help;
+  }
+
   .ant-table-thead > tr > th {
     background: @color-table-header;
   }

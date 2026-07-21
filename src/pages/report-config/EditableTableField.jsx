@@ -1,4 +1,8 @@
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+  DeleteOutlined,
+  PlusOutlined,
+  QuestionCircleOutlined,
+} from '@ant-design/icons';
 import { Button, Form, Input, Space, Table, Tooltip } from 'antd';
 import { useReportPage } from './ReportPageContext';
 import {
@@ -30,6 +34,27 @@ const renderColumnControl = (column, isReadonly) => {
     : null;
 };
 
+const renderColumnTitle = (column) => (
+  <span className="editable-table-field__column-title">
+    {column.required && (
+      <span aria-hidden="true" className="editable-table-field__required-mark">
+        *
+      </span>
+    )}
+    <span>{column.title}</span>
+    {column.tooltip && (
+      <Tooltip title={column.tooltip} trigger={['hover', 'focus']}>
+        <QuestionCircleOutlined
+          aria-label={`${column.title}说明`}
+          className="editable-table-field__tooltip-icon"
+          role="img"
+          tabIndex={0}
+        />
+      </Tooltip>
+    )}
+  </span>
+);
+
 const EditableTableField = ({ field, name }) => {
   const { isReadonly } = useReportPage();
   const columns = field.columns || [];
@@ -38,7 +63,7 @@ const EditableTableField = ({ field, name }) => {
     const tableColumns = columns.map((column, columnIndex) => ({
       dataIndex: column.name,
       fixed: column.fixed ?? (columnIndex === 0 ? 'left' : undefined),
-      title: column.title,
+      title: renderColumnTitle(column),
       width: column.width || 220,
       render: (value) => (
         <span className={isEmptyFieldValue(value) ? 'report-field-value--empty' : undefined}>
@@ -72,7 +97,7 @@ const EditableTableField = ({ field, name }) => {
         const tableColumns = columns.map((column, columnIndex) => ({
           dataIndex: column.name,
           fixed: column.fixed ?? (columnIndex === 0 ? 'left' : undefined),
-          title: column.title,
+          title: renderColumnTitle(column),
           width: column.width || 220,
           render: (_, row) => (
             <Form.Item
