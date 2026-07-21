@@ -1,5 +1,5 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
-import { Button, Form, Input, Table, Tooltip } from 'antd';
+import { Button, Form, Input, Space, Table, Tooltip } from 'antd';
 import { useReportPage } from './ReportPageContext';
 import {
   createTemporaryId,
@@ -35,8 +35,9 @@ const EditableTableField = ({ field, name }) => {
   const columns = field.columns || [];
 
   if (isReadonly) {
-    const tableColumns = columns.map((column) => ({
+    const tableColumns = columns.map((column, columnIndex) => ({
       dataIndex: column.name,
+      fixed: column.fixed ?? (columnIndex === 0 ? 'left' : undefined),
       title: column.title,
       width: column.width || 220,
       render: (value) => (
@@ -68,8 +69,9 @@ const EditableTableField = ({ field, name }) => {
   return (
     <Form.List name={name}>
       {(rows, { add, remove }) => {
-        const tableColumns = columns.map((column) => ({
+        const tableColumns = columns.map((column, columnIndex) => ({
           dataIndex: column.name,
+          fixed: column.fixed ?? (columnIndex === 0 ? 'left' : undefined),
           title: column.title,
           width: column.width || 220,
           render: (_, row) => (
@@ -85,19 +87,30 @@ const EditableTableField = ({ field, name }) => {
         if (!isReadonly) {
           tableColumns.push({
             align: 'center',
+            fixed: 'right',
             key: 'actions',
             title: '操作',
-            width: 72,
+            width: 96,
             render: (_, row) => (
-              <Tooltip title="删除此行">
-                <Button
-                  aria-label="删除此行"
-                  danger
-                  icon={<DeleteOutlined />}
-                  type="text"
-                  onClick={() => remove(row.name)}
-                />
-              </Tooltip>
+              <Space size={0}>
+                <Tooltip title="在此行后新增一行">
+                  <Button
+                    aria-label="在此行后新增一行"
+                    icon={<PlusOutlined />}
+                    type="text"
+                    onClick={() => add(getEmptyRow(columns), row.name + 1)}
+                  />
+                </Tooltip>
+                <Tooltip title="删除此行">
+                  <Button
+                    aria-label="删除此行"
+                    danger
+                    icon={<DeleteOutlined />}
+                    type="text"
+                    onClick={() => remove(row.name)}
+                  />
+                </Tooltip>
+              </Space>
             ),
           });
         }
@@ -118,16 +131,6 @@ const EditableTableField = ({ field, name }) => {
                 <Input />
               </Form.Item>
             ))}
-            {!isReadonly && (
-              <Button
-                className="editable-table-field__add-button"
-                icon={<PlusOutlined />}
-                type="dashed"
-                onClick={() => add(getEmptyRow(columns))}
-              >
-                新增一行
-              </Button>
-            )}
           </div>
         );
       }}
