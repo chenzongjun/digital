@@ -1,5 +1,6 @@
 import { Alert, Form, Input } from 'antd';
 import EditableTableField from './EditableTableField';
+import RichTextField from './RichTextField';
 import { useReportPage } from './ReportPageContext';
 import {
   getFieldRules,
@@ -16,6 +17,16 @@ const FieldRenderer = ({ depth, field }) => {
   const fieldName = field.fieldName || 'content';
   const name = ['sections', field.sectionId, fieldName];
   const rules = getFieldRules(field, `请填写${getSectionName(field.title)}`);
+
+  if (field.fieldType === 'richText') {
+    return (
+      <RichTextField
+        field={field}
+        name={name}
+        validationTitle={getSectionName(field.title)}
+      />
+    );
+  }
 
   if (isReadonly && ['input', 'textarea'].includes(field.fieldType)) {
     return (

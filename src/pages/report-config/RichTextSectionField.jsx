@@ -1,12 +1,12 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Tooltip } from 'antd';
 import RichTextEditor from './RichTextEditor';
+import RichTextViewer from './RichTextViewer';
 import { useReportPage } from './ReportPageContext';
 import {
   createTemporaryId,
   getRichTextRules,
   getSectionOrderPrefix,
-  isRichTextEmpty,
 } from './report-field-utils';
 
 const createRichTextSection = () => ({
@@ -17,34 +17,23 @@ const createRichTextSection = () => ({
 
 const RichTextSectionViewer = ({ richTextSections }) => (
   <div className="rich-text-section-list">
-    {richTextSections.map((richTextSection, index) => {
-      const isEmpty = isRichTextEmpty(richTextSection.content);
-
-      return (
-        <section
-          className="report-section report-section--depth-2 rich-text-section"
-          id={`report-section-${richTextSection.sectionId}`}
-          key={richTextSection.sectionId}
-        >
-          <header className="rich-text-section__header">
-            <div className="rich-text-section__title">
-              <span className="rich-text-section__order">
-                {getSectionOrderPrefix(index)}
-              </span>
-              <strong>{richTextSection.title || '未命名章节'}</strong>
-            </div>
-          </header>
-          {isEmpty ? (
-            <div className="rich-text-viewer rich-text-viewer--empty">--</div>
-          ) : (
-            <div
-              className="rich-text-viewer"
-              dangerouslySetInnerHTML={{ __html: richTextSection.content }}
-            />
-          )}
-        </section>
-      );
-    })}
+    {richTextSections.map((richTextSection, index) => (
+      <section
+        className="report-section report-section--depth-2 rich-text-section"
+        id={`report-section-${richTextSection.sectionId}`}
+        key={richTextSection.sectionId}
+      >
+        <header className="rich-text-section__header">
+          <div className="rich-text-section__title">
+            <span className="rich-text-section__order">
+              {getSectionOrderPrefix(index)}
+            </span>
+            <strong>{richTextSection.title || '未命名章节'}</strong>
+          </div>
+        </header>
+        <RichTextViewer value={richTextSection.content} />
+      </section>
+    ))}
   </div>
 );
 

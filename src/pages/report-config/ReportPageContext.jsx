@@ -40,6 +40,13 @@ const getInitialValues = () => {
       return;
     }
 
+    if (section.fieldType === 'richText') {
+      sections[section.sectionId] = {
+        content: `<p>这里是“${section.title}”的示例富文本内容。</p>`,
+      };
+      return;
+    }
+
     if (section.fieldType) {
       sections[section.sectionId] = {
         content: `这里是“${section.title}”的示例内容，用于验证配置化字段渲染。`,
