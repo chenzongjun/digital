@@ -28,6 +28,16 @@ export const getFieldRules = (field, defaultMessage) => {
   ];
 };
 
+export const isEmptyFieldValue = (value) => (
+  value === undefined
+  || value === null
+  || (typeof value === 'string' && value.trim() === '')
+);
+
+export const getReadonlyFieldValue = (value) => (
+  isEmptyFieldValue(value) ? '--' : String(value)
+);
+
 const getChineseNumber = (number) => {
   if (number < 10) {
     return CHINESE_DIGITS[number];
@@ -56,6 +66,10 @@ export const getSectionOrderPrefix = (index) => {
 export const isRichTextEmpty = (html) => {
   if (!html) {
     return true;
+  }
+
+  if (/<(?:img|video|iframe|table)\b/i.test(html)) {
+    return false;
   }
 
   return html

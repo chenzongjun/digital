@@ -53,6 +53,18 @@
   color: @color-danger;
 }
 
+.report-field-value {
+  min-height: 22px;
+  color: @color-text;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+
+  &--empty {
+    color: @color-secondary-text;
+  }
+}
+
 .editable-table-field {
   width: 100%;
   overflow: hidden;
@@ -68,6 +80,13 @@
 
   .ant-table-cell {
     vertical-align: top;
+  }
+
+  &--readonly .ant-table-cell {
+    color: @color-text;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
   }
 }
 
@@ -137,6 +156,42 @@
 
   &--readonly {
     background: @color-page-background;
+  }
+}
+
+.rich-text-viewer {
+  width: 100%;
+  color: @color-text;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+
+  > :first-child {
+    margin-top: 0;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+
+  img,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  table {
+    max-width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 8px;
+    border: 1px solid @color-border;
+  }
+
+  &--empty {
+    color: @color-secondary-text;
   }
 }
 

@@ -1,7 +1,11 @@
 import { Alert, Form, Input } from 'antd';
 import EditableTableField from './EditableTableField';
 import { useReportPage } from './ReportPageContext';
-import { getFieldRules } from './report-field-utils';
+import {
+  getFieldRules,
+  getReadonlyFieldValue,
+  isEmptyFieldValue,
+} from './report-field-utils';
 
 const SECTION_ORDER_PREFIX_PATTERN = /^(?:[一二三四五六七八九十]+、|（[一二三四五六七八九十]+）)\s*/;
 
@@ -12,6 +16,24 @@ const FieldRenderer = ({ depth, field }) => {
   const fieldName = field.fieldName || 'content';
   const name = ['sections', field.sectionId, fieldName];
   const rules = getFieldRules(field, `请填写${getSectionName(field.title)}`);
+
+  if (isReadonly && ['input', 'textarea'].includes(field.fieldType)) {
+    return (
+      <Form.Item noStyle shouldUpdate>
+        {({ getFieldValue }) => {
+          const value = getFieldValue(name);
+
+          return (
+            <div
+              className={`report-field-value${isEmptyFieldValue(value) ? ' report-field-value--empty' : ''}`}
+            >
+              {getReadonlyFieldValue(value)}
+            </div>
+          );
+        }}
+      </Form.Item>
+    );
+  }
 
   if (field.fieldType === 'textarea') {
     return (

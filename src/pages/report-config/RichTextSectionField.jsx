@@ -33,6 +33,39 @@ const getRichTextRules = (sectionConfig) => {
   ];
 };
 
+const RichTextSectionViewer = ({ richTextSections }) => (
+  <div className="rich-text-section-list">
+    {richTextSections.map((richTextSection, index) => {
+      const isEmpty = isRichTextEmpty(richTextSection.content);
+
+      return (
+        <section
+          className="report-section report-section--depth-2 rich-text-section"
+          id={`report-section-${richTextSection.sectionId}`}
+          key={richTextSection.sectionId}
+        >
+          <header className="rich-text-section__header">
+            <div className="rich-text-section__title">
+              <span className="rich-text-section__order">
+                {getSectionOrderPrefix(index)}
+              </span>
+              <strong>{richTextSection.title || '未命名章节'}</strong>
+            </div>
+          </header>
+          {isEmpty ? (
+            <div className="rich-text-viewer rich-text-viewer--empty">--</div>
+          ) : (
+            <div
+              className="rich-text-viewer"
+              dangerouslySetInnerHTML={{ __html: richTextSection.content }}
+            />
+          )}
+        </section>
+      );
+    })}
+  </div>
+);
+
 const RichTextSectionField = ({ section }) => {
   const {
     activeSectionId,
@@ -43,6 +76,18 @@ const RichTextSectionField = ({ section }) => {
   } = useReportPage();
   const richTextListName = ['sections', section.sectionId, 'children'];
   const richTextSections = Form.useWatch(richTextListName, form) || [];
+
+  if (isReadonly) {
+    return (
+      <Form.Item noStyle shouldUpdate>
+        {({ getFieldValue }) => (
+          <RichTextSectionViewer
+            richTextSections={getFieldValue(richTextListName) || []}
+          />
+        )}
+      </Form.Item>
+    );
+  }
 
   const getSectionConfig = (sectionId) => {
     return section.children?.find((item) => item.sectionId === sectionId);

@@ -1,7 +1,12 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import { Button, Form, Input, Table, Tooltip } from 'antd';
 import { useReportPage } from './ReportPageContext';
-import { createTemporaryId, getFieldRules } from './report-field-utils';
+import {
+  createTemporaryId,
+  getFieldRules,
+  getReadonlyFieldValue,
+  isEmptyFieldValue,
+} from './report-field-utils';
 
 const getEmptyRow = (columns) => {
   return columns.reduce(
@@ -28,6 +33,37 @@ const renderColumnControl = (column, isReadonly) => {
 const EditableTableField = ({ field, name }) => {
   const { isReadonly } = useReportPage();
   const columns = field.columns || [];
+
+  if (isReadonly) {
+    const tableColumns = columns.map((column) => ({
+      dataIndex: column.name,
+      title: column.title,
+      width: column.width || 220,
+      render: (value) => (
+        <span className={isEmptyFieldValue(value) ? 'report-field-value--empty' : undefined}>
+          {getReadonlyFieldValue(value)}
+        </span>
+      ),
+    }));
+
+    return (
+      <Form.Item noStyle shouldUpdate>
+        {({ getFieldValue }) => (
+          <div className="editable-table-field editable-table-field--readonly">
+            <Table
+              bordered
+              columns={tableColumns}
+              dataSource={getFieldValue(name) || []}
+              locale={{ emptyText: '--' }}
+              pagination={false}
+              rowKey="rowId"
+              scroll={{ x: 'max-content' }}
+            />
+          </div>
+        )}
+      </Form.Item>
+    );
+  }
 
   return (
     <Form.List name={name}>
