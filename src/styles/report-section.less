@@ -33,6 +33,12 @@
     cursor: help;
   }
 
+  &__readonly-value {
+    display: block;
+    max-width: 100%;
+    color: @color-text;
+  }
+
   .ant-form-item {
     margin-bottom: 0;
   }
@@ -92,11 +98,15 @@
     vertical-align: top;
   }
 
+  .ant-input-number,
+  .ant-picker,
+  .ant-select {
+    width: 100%;
+  }
+
   &--readonly .ant-table-cell {
     color: @color-text;
     line-height: 1.6;
-    overflow-wrap: anywhere;
-    white-space: pre-wrap;
   }
 }
 

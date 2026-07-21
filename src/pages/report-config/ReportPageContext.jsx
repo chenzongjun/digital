@@ -31,10 +31,15 @@ const getInitialValues = () => {
       sections[section.sectionId] = {
         rows: [{
           rowId: 'selection-criteria-row-1',
-          supplier: undefined,
-          brand: undefined,
-          quote: undefined,
-          score: undefined,
+          summary: '服务器采购方案需要兼顾性能、交付周期与后续运维支持，这是用于验证长文本省略展示的示例内容。',
+          supplier: '示例科技有限公司',
+          quote: 128.5,
+          remark: '技术方案满足核心需求，服务响应及时。',
+          deliveryDate: '2026-08-15',
+          recommendation: 'recommended',
+          capabilities: ['implementation', 'operations'],
+          supplierType: 'manufacturer',
+          reviewers: ['procurement', 'technology'],
         }],
       };
       return;

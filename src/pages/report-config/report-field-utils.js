@@ -1,4 +1,8 @@
+import moment from 'moment';
+
 const CHINESE_DIGITS = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+
+export const DEFAULT_DATE_FORMAT = 'YYYY-MM-DD';
 
 let temporaryIdSeed = 0;
 
@@ -31,12 +35,54 @@ export const getFieldRules = (field, defaultMessage) => {
 export const isEmptyFieldValue = (value) => (
   value === undefined
   || value === null
+  || (Array.isArray(value) && value.length === 0)
   || (typeof value === 'string' && value.trim() === '')
 );
 
 export const getReadonlyFieldValue = (value) => (
   isEmptyFieldValue(value) ? '--' : String(value)
 );
+
+export const parseDatePickerValue = (value, format = DEFAULT_DATE_FORMAT) => {
+  if (moment.isMoment(value)) {
+    return value;
+  }
+
+  return moment(value, [format, moment.ISO_8601], true);
+};
+
+const getOptionLabel = (options, value) => {
+  const matchedOption = (options || []).find((option) => option.value === value);
+
+  return matchedOption ? matchedOption.label : value;
+};
+
+export const getReadonlyTableValue = (column, value) => {
+  if (isEmptyFieldValue(value)) {
+    return '--';
+  }
+
+  if (column.fieldType === 'DatePicker') {
+    const format = column.componentProps?.format || DEFAULT_DATE_FORMAT;
+    const dateValue = parseDatePickerValue(value, format);
+
+    return dateValue.isValid() ? dateValue.format(format) : String(value);
+  }
+
+  if (['radio', 'checkbox', 'select', 'multipleSelect'].includes(column.fieldType)) {
+    const values = Array.isArray(value) ? value : [value];
+
+    return values
+      .map((optionValue) => String(getOptionLabel(column.options, optionValue)))
+      .join('、');
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item)).join('、');
+  }
+
+  return String(value);
+};
 
 const getChineseNumber = (number) => {
   if (number < 10) {

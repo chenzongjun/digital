@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   getRichTextRules,
   getReadonlyFieldValue,
+  getReadonlyTableValue,
   isEmptyFieldValue,
   isRichTextEmpty,
 } from './report-field-utils.js';
@@ -17,6 +18,59 @@ test('查看态空字段统一展示占位符', () => {
 test('查看态保留有效字段内容和数字零', () => {
   assert.equal(getReadonlyFieldValue('第一行\n第二行'), '第一行\n第二行');
   assert.equal(getReadonlyFieldValue(0), '0');
+});
+
+test('表格查看态将空数组展示为占位符并保留数字零', () => {
+  assert.equal(getReadonlyTableValue({ fieldType: 'checkbox' }, []), '--');
+  assert.equal(getReadonlyTableValue({ fieldType: 'inputNumber' }, 0), '0');
+});
+
+test('表格查看态为普通数组使用统一分隔符', () => {
+  assert.equal(
+    getReadonlyTableValue({ fieldType: 'text' }, ['第一项', '第二项']),
+    '第一项、第二项',
+  );
+});
+
+test('表格查看态按配置格式化日期并回退无效值', () => {
+  const dateColumn = {
+    fieldType: 'DatePicker',
+    componentProps: { format: 'YYYY年MM月DD日' },
+  };
+
+  assert.equal(getReadonlyTableValue(dateColumn, '2026-07-21'), '2026年07月21日');
+  assert.equal(getReadonlyTableValue(dateColumn, '待确认'), '待确认');
+});
+
+test('表格查看态将选项值映射为单选和多选标签', () => {
+  const options = [
+    { label: '采购部', value: 'procurement' },
+    { label: '技术部', value: 'technology' },
+  ];
+
+  assert.equal(
+    getReadonlyTableValue({ fieldType: 'select', options }, 'procurement'),
+    '采购部',
+  );
+  assert.equal(
+    getReadonlyTableValue(
+      { fieldType: 'multipleSelect', options },
+      ['procurement', 'technology'],
+    ),
+    '采购部、技术部',
+  );
+});
+
+test('表格查看态为未配置选项回退原始值', () => {
+  const column = {
+    fieldType: 'checkbox',
+    options: [{ label: '实施', value: 'implementation' }],
+  };
+
+  assert.equal(
+    getReadonlyTableValue(column, ['implementation', 'legacy-value']),
+    '实施、legacy-value',
+  );
 });
 
 test('富文本判空保留文本和媒体内容', () => {

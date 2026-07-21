@@ -3,14 +3,39 @@ import {
   PlusOutlined,
   QuestionCircleOutlined,
 } from '@ant-design/icons';
-import { Button, Form, Input, Space, Table, Tooltip } from 'antd';
+import {
+  Button,
+  Checkbox,
+  DatePicker,
+  Form,
+  Input,
+  InputNumber,
+  Radio,
+  Select,
+  Space,
+  Table,
+  Tooltip,
+  Typography,
+} from 'antd';
 import { useReportPage } from './ReportPageContext';
 import {
   createTemporaryId,
+  DEFAULT_DATE_FORMAT,
   getFieldRules,
-  getReadonlyFieldValue,
+  getReadonlyTableValue,
   isEmptyFieldValue,
+  parseDatePickerValue,
 } from './report-field-utils';
+
+const RESERVED_CONTROL_PROPS = new Set([
+  'value',
+  'onChange',
+  'disabled',
+  'options',
+  'mode',
+]);
+const DEFAULT_COLUMN_WIDTH = 220;
+const ACTION_COLUMN_WIDTH = 96;
 
 const getEmptyRow = (columns) => {
   return columns.reduce(
@@ -19,14 +44,73 @@ const getEmptyRow = (columns) => {
   );
 };
 
-const renderColumnControl = (column, isReadonly) => {
-  if (column.fieldType === 'input') {
-    return (
-      <Input
-        disabled={isReadonly || column.editable === false}
-        placeholder={column.placeholder}
-      />
-    );
+const getTableScrollWidth = (columns, hasActionColumn) => {
+  const columnsWidth = columns.reduce(
+    (total, column) => total + (column.width || DEFAULT_COLUMN_WIDTH),
+    0,
+  );
+
+  return columnsWidth + (hasActionColumn ? ACTION_COLUMN_WIDTH : 0);
+};
+
+const getComponentProps = (componentProps = {}) => {
+  return Object.fromEntries(
+    Object.entries(componentProps).filter(([name]) => !RESERVED_CONTROL_PROPS.has(name)),
+  );
+};
+
+const StringDatePicker = ({ value, onChange, ...componentProps }) => {
+  const format = componentProps.format || DEFAULT_DATE_FORMAT;
+  const parsedValue = isEmptyFieldValue(value)
+    ? null
+    : parseDatePickerValue(value, format);
+
+  return (
+    <DatePicker
+      {...componentProps}
+      format={format}
+      value={parsedValue?.isValid() ? parsedValue : null}
+      onChange={(dateValue, dateString) => {
+        onChange?.(dateValue ? dateString : undefined);
+      }}
+    />
+  );
+};
+
+const ReadonlyTableCell = ({ column, value }) => {
+  const displayValue = getReadonlyTableValue(column, value);
+  const isEmpty = isEmptyFieldValue(value);
+
+  return (
+    <Typography.Text
+      className={`editable-table-field__readonly-value${isEmpty ? ' report-field-value--empty' : ''}`}
+      ellipsis={isEmpty ? true : { tooltip: displayValue }}
+    >
+      {displayValue}
+    </Typography.Text>
+  );
+};
+
+const renderColumnControl = (column) => {
+  const componentProps = getComponentProps(column.componentProps);
+  const disabled = column.editable === false || column.componentProps?.disabled === true;
+  const controlProps = { ...componentProps, disabled };
+
+  const controlMap = {
+    input: <Input {...controlProps} />,
+    inputNumber: <InputNumber {...controlProps} />,
+    textArea: <Input.TextArea {...controlProps} />,
+    DatePicker: <StringDatePicker {...controlProps} />,
+    radio: <Radio.Group {...controlProps} options={column.options || []} />,
+    checkbox: <Checkbox.Group {...controlProps} options={column.options || []} />,
+    select: <Select {...controlProps} options={column.options || []} />,
+    multipleSelect: (
+      <Select {...controlProps} mode="multiple" options={column.options || []} />
+    ),
+  };
+
+  if (controlMap[column.fieldType]) {
+    return controlMap[column.fieldType];
   }
 
   return import.meta.env.DEV
@@ -62,14 +146,11 @@ const EditableTableField = ({ field, name }) => {
   if (isReadonly) {
     const tableColumns = columns.map((column, columnIndex) => ({
       dataIndex: column.name,
+      ellipsis: true,
       fixed: column.fixed ?? (columnIndex === 0 ? 'left' : undefined),
       title: renderColumnTitle(column),
-      width: column.width || 220,
-      render: (value) => (
-        <span className={isEmptyFieldValue(value) ? 'report-field-value--empty' : undefined}>
-          {getReadonlyFieldValue(value)}
-        </span>
-      ),
+      width: column.width || DEFAULT_COLUMN_WIDTH,
+      render: (value) => <ReadonlyTableCell column={column} value={value} />,
     }));
 
     return (
@@ -83,7 +164,8 @@ const EditableTableField = ({ field, name }) => {
               locale={{ emptyText: '--' }}
               pagination={false}
               rowKey="rowId"
-              scroll={{ x: 'max-content' }}
+              scroll={{ x: getTableScrollWidth(columns, false) }}
+              tableLayout="fixed"
             />
           </div>
         )}
@@ -98,13 +180,15 @@ const EditableTableField = ({ field, name }) => {
           dataIndex: column.name,
           fixed: column.fixed ?? (columnIndex === 0 ? 'left' : undefined),
           title: renderColumnTitle(column),
-          width: column.width || 220,
+          width: column.width || DEFAULT_COLUMN_WIDTH,
           render: (_, row) => (
             <Form.Item
               name={[row.name, column.name]}
               rules={getFieldRules(column, `请填写${column.title}`)}
             >
-              {renderColumnControl(column, isReadonly)}
+              {column.fieldType === 'text'
+                ? <ReadonlyTableCell column={column} />
+                : renderColumnControl(column)}
             </Form.Item>
           ),
         }));
@@ -115,7 +199,7 @@ const EditableTableField = ({ field, name }) => {
             fixed: 'right',
             key: 'actions',
             title: '操作',
-            width: 96,
+            width: ACTION_COLUMN_WIDTH,
             render: (_, row) => (
               <Space size={0}>
                 <Tooltip title="在此行后新增一行">
@@ -149,7 +233,8 @@ const EditableTableField = ({ field, name }) => {
               locale={{ emptyText: '暂无评价数据' }}
               pagination={false}
               rowKey="key"
-              scroll={{ x: 'max-content' }}
+              scroll={{ x: getTableScrollWidth(columns, true) }}
+              tableLayout="fixed"
             />
             {rows.map((row) => (
               <Form.Item key={row.key} hidden name={[row.name, 'rowId']}>

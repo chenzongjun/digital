@@ -1,5 +1,27 @@
 export const SELECTION_PROCESS_SECTION_ID = 'selection-process';
 
+const RECOMMENDATION_OPTIONS = [
+  { label: '推荐', value: 'recommended' },
+  { label: '不推荐', value: 'not-recommended' },
+];
+
+const CAPABILITY_OPTIONS = [
+  { label: '实施', value: 'implementation' },
+  { label: '运维', value: 'operations' },
+  { label: '培训', value: 'training' },
+];
+
+const SUPPLIER_TYPE_OPTIONS = [
+  { label: '原厂', value: 'manufacturer' },
+  { label: '代理商', value: 'agent' },
+];
+
+const REVIEWER_OPTIONS = [
+  { label: '采购部', value: 'procurement' },
+  { label: '技术部', value: 'technology' },
+  { label: '财务部', value: 'finance' },
+];
+
 export const REPORT_SECTIONS = [
   {
     sectionId: 'requirement-description',
@@ -26,28 +48,90 @@ export const REPORT_SECTIONS = [
         fieldName: 'rows',
         columns: [
           {
+            name: 'summary',
+            title: '方案摘要',
+            fieldType: 'text',
+            width: 240,
+            tooltip: '该列仅用于展示，不提供编辑控件。',
+          },
+          {
             name: 'supplier',
             title: '供应商',
             fieldType: 'input',
-            placeholder: '请输入供应商',
-          },
-          {
-            name: 'brand',
-            title: '品牌',
-            fieldType: 'input',
-            placeholder: '请输入品牌',
+            required: true,
+            componentProps: {
+              maxLength: 50,
+              placeholder: '请输入供应商',
+            },
           },
           {
             name: 'quote',
             title: '报价（万元）',
-            fieldType: 'input',
-            placeholder: '请输入报价（万元）',
+            fieldType: 'inputNumber',
+            width: 180,
+            componentProps: {
+              min: 0,
+              precision: 2,
+              placeholder: '请输入报价',
+            },
           },
           {
-            name: 'score',
-            title: '评分',
-            fieldType: 'input',
-            placeholder: '请输入评分',
+            name: 'remark',
+            title: '评价说明',
+            fieldType: 'textArea',
+            width: 260,
+            componentProps: {
+              autoSize: { minRows: 1, maxRows: 3 },
+              maxLength: 200,
+              placeholder: '请输入评价说明',
+            },
+          },
+          {
+            name: 'deliveryDate',
+            title: '预计交付日期',
+            fieldType: 'DatePicker',
+            width: 180,
+            componentProps: {
+              allowClear: true,
+              format: 'YYYY-MM-DD',
+              placeholder: '请选择日期',
+            },
+          },
+          {
+            name: 'recommendation',
+            title: '是否推荐',
+            fieldType: 'radio',
+            width: 190,
+            options: RECOMMENDATION_OPTIONS,
+          },
+          {
+            name: 'capabilities',
+            title: '服务能力',
+            fieldType: 'checkbox',
+            width: 260,
+            options: CAPABILITY_OPTIONS,
+          },
+          {
+            name: 'supplierType',
+            title: '供应商类型',
+            fieldType: 'select',
+            width: 190,
+            options: SUPPLIER_TYPE_OPTIONS,
+            componentProps: {
+              allowClear: true,
+              placeholder: '请选择类型',
+            },
+          },
+          {
+            name: 'reviewers',
+            title: '参与评审部门',
+            fieldType: 'multipleSelect',
+            width: 240,
+            options: REVIEWER_OPTIONS,
+            componentProps: {
+              allowClear: true,
+              placeholder: '请选择评审部门',
+            },
           },
         ],
       },
