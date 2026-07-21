@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  getRichTextRules,
   getReadonlyFieldValue,
   isEmptyFieldValue,
   isRichTextEmpty,
@@ -23,4 +24,16 @@ test('富文本判空保留文本和媒体内容', () => {
   assert.equal(isRichTextEmpty('<p>&nbsp;</p>'), true);
   assert.equal(isRichTextEmpty('<p><strong>报告内容</strong></p>'), false);
   assert.equal(isRichTextEmpty('<p><img src="example.png" alt="附件" /></p>'), false);
+});
+
+test('富文本为空时触发章节校验', async () => {
+  const [requiredRule] = getRichTextRules({}, '寻源');
+
+  await assert.rejects(
+    requiredRule.validator(undefined, '<p><br></p>'),
+    /请填写寻源/,
+  );
+  await assert.doesNotReject(
+    requiredRule.validator(undefined, '<p>供应商信息</p>'),
+  );
 });

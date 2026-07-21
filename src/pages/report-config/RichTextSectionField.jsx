@@ -4,6 +4,7 @@ import RichTextEditor from './RichTextEditor';
 import { useReportPage } from './ReportPageContext';
 import {
   createTemporaryId,
+  getRichTextRules,
   getSectionOrderPrefix,
   isRichTextEmpty,
 } from './report-field-utils';
@@ -13,25 +14,6 @@ const createRichTextSection = () => ({
   title: '新章节',
   content: '',
 });
-
-const getRichTextRules = (sectionConfig) => {
-  const configuredRules = sectionConfig?.rules || [];
-
-  if (!sectionConfig?.required) {
-    return configuredRules.length ? configuredRules : undefined;
-  }
-
-  return [
-    {
-      validator: (_, value) => (
-        isRichTextEmpty(value)
-          ? Promise.reject(new Error(`请填写${sectionConfig.title}`))
-          : Promise.resolve()
-      ),
-    },
-    ...configuredRules,
-  ];
-};
 
 const RichTextSectionViewer = ({ richTextSections }) => (
   <div className="rich-text-section-list">
@@ -198,7 +180,7 @@ const RichTextSectionField = ({ section }) => {
                 <Form.Item
                   className="rich-text-section__content"
                   name={[field.name, 'content']}
-                  rules={getRichTextRules(sectionConfig)}
+                  rules={getRichTextRules(sectionConfig, sectionValue.title)}
                 >
                   <RichTextEditor disabled={!canEditContent} />
                 </Form.Item>

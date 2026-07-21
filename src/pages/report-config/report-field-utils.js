@@ -78,3 +78,19 @@ export const isRichTextEmpty = (html) => {
     .trim()
     .length === 0;
 };
+
+export const getRichTextRules = (sectionConfig, sectionTitle) => {
+  const configuredRules = sectionConfig?.rules || [];
+  const title = sectionTitle || sectionConfig?.title || '章节内容';
+
+  return [
+    {
+      validator: (_, value) => (
+        isRichTextEmpty(value)
+          ? Promise.reject(new Error(`请填写${title}`))
+          : Promise.resolve()
+      ),
+    },
+    ...configuredRules,
+  ];
+};
