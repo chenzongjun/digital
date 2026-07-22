@@ -1,4 +1,5 @@
 import { Alert, Form, Input } from 'antd';
+import AttachmentField from './AttachmentField';
 import EditableTableField from './EditableTableField';
 import RichTextField from './RichTextField';
 import { useReportPage } from './ReportPageContext';
@@ -7,6 +8,7 @@ import {
   getReadonlyFieldValue,
   isEmptyFieldValue,
 } from './report-field-utils';
+import { getAttachmentFieldConfig } from './attachment-field-utils';
 
 const SECTION_ORDER_PREFIX_PATTERN = /^(?:[一二三四五六七八九十]+、|（[一二三四五六七八九十]+）)\s*/;
 
@@ -14,7 +16,9 @@ const getSectionName = (title) => title.replace(SECTION_ORDER_PREFIX_PATTERN, ''
 
 const FieldRenderer = ({ depth, field }) => {
   const { isReadonly } = useReportPage();
-  const fieldName = field.fieldName || 'content';
+  const fieldName = field.fieldType === 'attachment'
+    ? getAttachmentFieldConfig(field).fieldName
+    : field.fieldName || 'content';
   const name = ['sections', field.sectionId, fieldName];
   const rules = getFieldRules(field, `请填写${getSectionName(field.title)}`);
 
@@ -71,6 +75,14 @@ const FieldRenderer = ({ depth, field }) => {
 
   if (field.fieldType === 'editableTable') {
     return <EditableTableField field={field} name={name} />;
+  }
+
+  if (field.fieldType === 'attachment') {
+    return (
+      <Form.Item name={name} rules={rules}>
+        <AttachmentField field={field} />
+      </Form.Item>
+    );
   }
 
   return import.meta.env.DEV ? (

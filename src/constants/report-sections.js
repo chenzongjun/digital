@@ -1,26 +1,26 @@
-export const SELECTION_PROCESS_SECTION_ID = 'selection-process';
+export const SELECTION_PROCESS_SECTION_ID = 'selection-process'
 
 const RECOMMENDATION_OPTIONS = [
   { label: '推荐', value: 'recommended' },
   { label: '不推荐', value: 'not-recommended' },
-];
+]
 
 const CAPABILITY_OPTIONS = [
   { label: '实施', value: 'implementation' },
   { label: '运维', value: 'operations' },
   { label: '培训', value: 'training' },
-];
+]
 
 const SUPPLIER_TYPE_OPTIONS = [
   { label: '原厂', value: 'manufacturer' },
   { label: '代理商', value: 'agent' },
-];
+]
 
 const REVIEWER_OPTIONS = [
   { label: '采购部', value: 'procurement' },
   { label: '技术部', value: 'technology' },
   { label: '财务部', value: 'finance' },
-];
+]
 
 export const REPORT_SECTIONS = [
   {
@@ -232,16 +232,12 @@ export const REPORT_SECTIONS = [
   {
     sectionId: 'attachments',
     title: '七、附录',
-    fieldType: 'textarea',
-    editable: true,
+    fieldType: 'attachment',
   },
-];
+]
 
 export const flattenReportSections = (sections = REPORT_SECTIONS, depth = 1) => {
-  return sections.flatMap(({ children, ...section }) => [
-    { ...section, depth },
-    ...(children ? flattenReportSections(children, depth + 1) : []),
-  ]);
-};
+  return sections.flatMap(({ children, ...section }) => [{ ...section, depth }, ...(children ? flattenReportSections(children, depth + 1) : [])])
+}
 
-export const FLAT_REPORT_SECTIONS = flattenReportSections();
+export const FLAT_REPORT_SECTIONS = flattenReportSections()

@@ -71,6 +71,55 @@
   }
 }
 
+.attachment-field {
+  width: 100%;
+
+  .ant-upload.ant-upload-drag {
+    background: @color-surface;
+  }
+
+  .ant-upload-list {
+    text-align: left;
+  }
+
+  .ant-upload-list-item-name {
+    overflow-wrap: anywhere;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  &__item-content {
+    flex: 1 1 auto;
+    min-width: 0;
+
+    .ant-upload-list-item {
+      margin-top: 0;
+    }
+  }
+
+  &__item-actions {
+    flex: 0 0 auto;
+
+    .ant-btn {
+      padding: 0 4px;
+    }
+  }
+
+  &--readonly .ant-upload-list {
+    margin-top: 0;
+  }
+
+  &__empty {
+    margin: 8px 0 0;
+  }
+}
+
 .editable-table-field {
   width: 100%;
   overflow: hidden;
@@ -220,6 +269,25 @@
 }
 
 @media (max-width: 767px) {
+  .attachment-field {
+    .ant-upload.ant-upload-drag {
+      padding: 0 12px;
+    }
+
+    .ant-upload-drag-icon {
+      margin-bottom: 12px;
+    }
+
+    &__item {
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    &__item-actions {
+      margin-left: auto;
+    }
+  }
+
   .rich-text-section {
     &__header {
       align-items: flex-start;
