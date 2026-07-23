@@ -233,6 +233,7 @@ export const REPORT_SECTIONS = [
     sectionId: 'attachments',
     title: '七、附录',
     fieldType: 'attachment',
+    tooltip: '请上传选型过程中的相关文件，如需求文档、供应商响应、测试报告等。',
   },
 ]
 

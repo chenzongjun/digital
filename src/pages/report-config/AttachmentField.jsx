@@ -9,7 +9,9 @@ import { useReportPage } from './ReportPageContext';
 import {
   getAttachmentAcceptValue,
   getAttachmentFieldConfig,
+  getAttachmentRemainingSizeMB,
   normalizeAttachmentFile,
+  validateAttachmentBatch,
   validateAttachmentFile,
 } from './attachment-field-utils';
 import { uploadReportAttachment } from './report-upload-adapter';
@@ -24,8 +26,13 @@ const AttachmentField = ({ field, onChange, value }) => {
   const attachmentConfig = getAttachmentFieldConfig(field);
   const fileList = getFileList(value);
   const blobUrlsRef = useRef(new Set());
+  const rejectedBatchRef = useRef();
   const accept = getAttachmentAcceptValue(attachmentConfig.accept);
   const canUpload = !isReadonly && attachmentConfig.editable;
+  const remainingSizeMB = getAttachmentRemainingSizeMB(
+    fileList,
+    attachmentConfig,
+  );
 
   useEffect(() => {
     const nextBlobUrls = new Set(
@@ -62,7 +69,24 @@ const AttachmentField = ({ field, onChange, value }) => {
     return validationResult.isValid;
   };
 
-  const handleBeforeUpload = (file) => {
+  const handleBeforeUpload = (file, batchFileList) => {
+    const batchValidationResult = validateAttachmentBatch(
+      batchFileList,
+      fileList,
+      attachmentConfig,
+    );
+
+    if (!batchValidationResult.isValid) {
+      if (rejectedBatchRef.current !== batchFileList) {
+        message.error(batchValidationResult.message);
+        rejectedBatchRef.current = batchFileList;
+      }
+
+      return Upload.LIST_IGNORE;
+    }
+
+    rejectedBatchRef.current = undefined;
+
     return showValidationError(file) ? true : Upload.LIST_IGNORE;
   };
 
@@ -76,36 +100,46 @@ const AttachmentField = ({ field, onChange, value }) => {
     });
   };
 
-  const renderUploadItem = (originNode, file) => (
-    <div className="attachment-field__item">
-      <div className="attachment-field__item-content">{originNode}</div>
-      {file.status === 'done' && file.url && (
-        <Space className="attachment-field__item-actions" size={4}>
-          <Button
-            aria-label={`预览${file.name}`}
-            href={file.url}
-            icon={<EyeOutlined />}
-            rel="noopener noreferrer"
-            size="small"
-            target="_blank"
-            type="link"
-          >
-            预览
-          </Button>
-          <Button
-            aria-label={`下载${file.name}`}
-            download={file.name}
-            href={file.url}
-            icon={<DownloadOutlined />}
-            rel="noopener noreferrer"
-            size="small"
-            type="link"
-          >
-            下载
-          </Button>
-        </Space>
-      )}
+  const renderAttachmentTooltip = () => field.tooltip ? (
+    <div className="attachment-field__tooltip">
+      <div>提示：</div>
+      <div className="attachment-field__tooltip-content">{field.tooltip}</div>
     </div>
+  ) : null;
+
+  const renderUploadItem = (originNode, file, uploadFileList) => (
+    <>
+      {uploadFileList?.[0] === file && renderAttachmentTooltip()}
+      <div className="attachment-field__item">
+        <div className="attachment-field__item-content">{originNode}</div>
+        {file.status === 'done' && file.url && (
+          <Space className="attachment-field__item-actions" size={4}>
+            <Button
+              aria-label={`预览${file.name}`}
+              href={file.url}
+              icon={<EyeOutlined />}
+              rel="noopener noreferrer"
+              size="small"
+              target="_blank"
+              type="link"
+            >
+              预览
+            </Button>
+            <Button
+              aria-label={`下载${file.name}`}
+              download={file.name}
+              href={file.url}
+              icon={<DownloadOutlined />}
+              rel="noopener noreferrer"
+              size="small"
+              type="link"
+            >
+              下载
+            </Button>
+          </Space>
+        )}
+      </div>
+    </>
   );
 
   const showUploadList = {
@@ -156,9 +190,16 @@ const AttachmentField = ({ field, onChange, value }) => {
         </p>
         <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
         <p className="ant-upload-hint">
-          支持多文件上传，单个文件不超过 {attachmentConfig.maxSizeMB} MB
+          支持多文件上传，单个文件不超过 {attachmentConfig.maxSizeMB} MB，
+          所有文件合计不超过 {attachmentConfig.maxTotalSizeMB} MB
         </p>
+        {remainingSizeMB !== null && (
+          <p className="ant-upload-hint">
+            剩余可上传 {remainingSizeMB} MB
+          </p>
+        )}
       </Dragger>
+      {!fileList.length && renderAttachmentTooltip()}
     </div>
   );
 };

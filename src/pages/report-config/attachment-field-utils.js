@@ -17,7 +17,8 @@ export const DEFAULT_ATTACHMENT_ACCEPT = Object.freeze([
   '.7z',
 ]);
 export const DEFAULT_ATTACHMENT_FIELD_NAME = 'files';
-export const DEFAULT_ATTACHMENT_MAX_SIZE_MB = 20;
+export const DEFAULT_ATTACHMENT_MAX_SIZE_MB = 100;
+export const DEFAULT_ATTACHMENT_MAX_TOTAL_SIZE_MB = 300;
 export const DEFAULT_ATTACHMENT_MULTIPLE = true;
 
 export const getAttachmentFieldConfig = (field = {}) => ({
@@ -26,6 +27,8 @@ export const getAttachmentFieldConfig = (field = {}) => ({
   editable: field.editable ?? true,
   fieldName: field.fieldName ?? DEFAULT_ATTACHMENT_FIELD_NAME,
   maxSizeMB: field.maxSizeMB ?? DEFAULT_ATTACHMENT_MAX_SIZE_MB,
+  maxTotalSizeMB:
+    field.maxTotalSizeMB ?? DEFAULT_ATTACHMENT_MAX_TOTAL_SIZE_MB,
   multiple: field.multiple ?? DEFAULT_ATTACHMENT_MULTIPLE,
 });
 
@@ -91,6 +94,56 @@ export const validateAttachmentFile = (file, field) => {
       isValid: false,
       message: `单个文件大小不能超过 ${maxSizeMB} MB`,
       reason: 'size',
+    };
+  }
+
+  return { isValid: true };
+};
+
+const getAttachmentFilesSize = (files = []) => {
+  return files.reduce((totalSize, file) => {
+    if (file.status === 'error') {
+      return totalSize;
+    }
+
+    const fileSize = Number(file.size);
+
+    return totalSize + (Number.isFinite(fileSize) ? fileSize : 0);
+  }, 0);
+};
+
+export const getAttachmentRemainingSizeMB = (files, field) => {
+  const attachmentConfig = getAttachmentFieldConfig(field);
+  const maxTotalSizeMB = Number(attachmentConfig.maxTotalSizeMB);
+
+  if (maxTotalSizeMB <= 0) {
+    return null;
+  }
+
+  const remainingSize = Math.max(
+    maxTotalSizeMB * MEGABYTE_IN_BYTES - getAttachmentFilesSize(files),
+    0,
+  );
+
+  return Math.floor((remainingSize / MEGABYTE_IN_BYTES) * 100) / 100;
+};
+
+export const validateAttachmentBatch = (
+  files,
+  existingFiles,
+  field,
+) => {
+  const attachmentConfig = getAttachmentFieldConfig(field);
+  const maxTotalSizeMB = Number(attachmentConfig.maxTotalSizeMB);
+  const maxTotalSize = maxTotalSizeMB * MEGABYTE_IN_BYTES;
+  const totalSize = getAttachmentFilesSize(existingFiles)
+    + getAttachmentFilesSize(files);
+
+  if (maxTotalSizeMB > 0 && totalSize > maxTotalSize) {
+    return {
+      isValid: false,
+      message: `所有文件总大小不能超过 ${maxTotalSizeMB} MB`,
+      reason: 'totalSize',
     };
   }
 
