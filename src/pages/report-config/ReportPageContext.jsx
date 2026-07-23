@@ -101,6 +101,7 @@ export const ReportPageProvider = ({ mode, children }) => {
   const initialValues = useMemo(getInitialValues, [])
   const [activeSectionId, setActiveSectionId] = useState(REPORT_SECTIONS[0].sectionId)
   const [isDirectoryCollapsed, setIsDirectoryCollapsed] = useState(false)
+  const [isModified, setIsModified] = useState(false)
   const contentScrollRef = useRef(null)
   const isReadonly = mode === 'detail' || mode === 'approval'
 
@@ -124,10 +125,15 @@ export const ReportPageProvider = ({ mode, children }) => {
 
   const handleCancel = useCallback(() => {
     form.resetFields()
+    setIsModified(false)
     setActiveSectionId(REPORT_SECTIONS[0].sectionId)
     scrollToSection(REPORT_SECTIONS[0].sectionId, 'auto')
     message.info('已恢复示例初始值')
   }, [form, scrollToSection])
+
+  const handleValuesChange = useCallback(() => {
+    setIsModified(true)
+  }, [])
 
   const handleSave = useCallback(() => {
     message.success('报告已暂存（示例）')
@@ -165,15 +171,23 @@ export const ReportPageProvider = ({ mode, children }) => {
       setActiveSectionId,
       isDirectoryCollapsed,
       setIsDirectoryCollapsed,
+      isModified,
+      setIsModified,
       contentScrollRef,
       scrollToSection,
     }),
-    [activeSectionId, form, handleCancel, handleSave, handleSubmit, initialValues, isDirectoryCollapsed, isReadonly, mode, scrollToSection],
+    [activeSectionId, form, handleCancel, handleSave, handleSubmit, initialValues, isDirectoryCollapsed, isModified, isReadonly, mode, scrollToSection],
   )
 
   return (
     <ReportPageContext.Provider value={contextValue}>
-      <Form component={false} form={form} initialValues={initialValues} layout='vertical'>
+      <Form
+        component={false}
+        form={form}
+        initialValues={initialValues}
+        layout='vertical'
+        onValuesChange={handleValuesChange}
+      >
         {children}
       </Form>
     </ReportPageContext.Provider>
